@@ -8,12 +8,19 @@ export const useWebAppIsExpanded = () => {
     const { viewportHeight } = useWebAppViewport();
     const [isExpanded, setIsExpanded] = useState(webApp?.isExpanded ?? false)
 
+    const expand = () => {
+
+        webApp?.expand();
+        setIsExpanded(true);
+
+    }
+
     useEffect(() => {
         
         setIsExpanded(webApp?.isExpanded ?? false);
 
     }, [webApp, viewportHeight]);
 
-    return isExpanded;
+    return { isExpanded, expand };
 
 };

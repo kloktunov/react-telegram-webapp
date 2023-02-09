@@ -4,66 +4,73 @@ import { TelegramWebAppContext, TelegramWebAppModel } from "../context/TelegramW
 import { TelegramWebApps } from "../telegram-webapps";
 
 
+// Define the properties for the component TelegramWebApp
 type TelegramWebAppProps = {
-  children: JSX.Element;
+	children: React.ReactNode;
 };
 
+// Define the component TelegramWebApp
 export function TelegramWebApp({ children }: TelegramWebAppProps) {
+	// State hook to track if the Telegram web app is ready
+	const [isReady, setIsReady] = useState(false);
 
-  const [isReady, setIsReady] = useState(false);
+	// The model that contains the Telegram web app and its ready state
+	const model: TelegramWebAppModel = {
+		// A getter function to retrieve the Telegram web app
+		get app() {
+			// If the current environment doesn't have a window object, return undefined
+			if (typeof window === 'undefined') {
+				return undefined;
+			}
+			// Otherwise, try to retrieve the Telegram web app from the window object
+			return (window as any)?.Telegram?.WebApp as TelegramWebApps.WebApp;
+		},
+		// The ready state of the Telegram web app
+		isReady
+	};
 
-  const model: TelegramWebAppModel = {
-    
-    get app() {
+	// A function that sets the ready state to true
+	const onReady = () => {
+		setIsReady(true);
+	};
 
-      if(typeof window == 'undefined'){
-        return undefined;
-      }
-
-      return (window as any)?.Telegram?.WebApp as TelegramWebApps.WebApp;
-
-    },
-
-    isReady,
-  };
-
-  const onReady = () => {
-    setIsReady(true);
-  };
-
-  return (
-    <TelegramWebAppScript onLoad={onReady}>
-      <TelegramWebAppContext.Provider value={model}>{children}</TelegramWebAppContext.Provider>
-    </TelegramWebAppScript>
-  );
+	// Render the component with the model and its children
+	return (
+		<TelegramWebAppScript onLoad={onReady}>
+			<TelegramWebAppContext.Provider value={model}>{children}</TelegramWebAppContext.Provider>
+		</TelegramWebAppScript>
+	);
 }
 
+// A higher-order component that passes the Telegram web app and its ready state to a given component
 export function withTelegramWebApp(Component: ComponentType<any>, contextProps: Omit<TelegramWebAppProps, "children">) {
-  return function WithTelegramWebApp(props: any) {
-    return (
-      <TelegramWebApp {...contextProps}>
-        <Component {...props} />
-      </TelegramWebApp>
-    );
-  };
+	return function WithTelegramWebApp(props: any) {
+		return (
+			<TelegramWebApp {...contextProps}>
+				<Component {...props} />
+			</TelegramWebApp>
+		);
+	};
 }
 
+// A functional component that injects the Telegram web app script into the document head
 function TelegramWebAppScript({ children, onLoad }: { children: JSX.Element; onLoad: () => void }) {
 
-  // inject on load, remove on unload (using effect), but only once per page
-  useEffect(() => {
-
-    const tgWebAppScript = document.createElement("script");
-    tgWebAppScript.src = "https://telegram.org/js/telegram-web-app.js";
-    tgWebAppScript.onload = onLoad;
-
-    document.head.appendChild(tgWebAppScript);
-
-    return () => {
-      document.head.removeChild(tgWebAppScript);
-    };
-    
-  }, []);
-
-  return children;
+	// Use an effect hook to inject the Telegram web app script into the document head once and remove it on unload
+	useEffect(() => {
+		// Create a new script element for the Telegram web app script
+		const tgWebAppScript = document.createElement("script");
+		// Set the source of the script to the Telegram web app script
+		tgWebAppScript.src = "https://telegram.org/js/telegram-web-app.js";
+		// Set the onload callback to the provided onLoad function
+		tgWebAppScript.onload = onLoad;
+		// Append the script to the document head
+		document.head.appendChild(tgWebAppScript);
+		// Return a cleanup function that removes the script from the document head
+		return () => {
+			document.head.removeChild(tgWebAppScript);
+		};
+	}, []);
+ 
+	return children;
 }

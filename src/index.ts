@@ -9,15 +9,16 @@ export { WebAppBackButton };
 
 // Hooks
 export { useTelegramWebApp } from './context/TelegramWebAppContext';
-export { useWebAppChat } from './hooks/useWebAppChat'
-export { useWebAppHapticFeedback } from './hooks/useWebAppHapticFeedback'
+export { useIsWebAppReady } from './hooks/useIsWebAppReady'
 export { useWebAppInitDataUnsafe } from './hooks/useWebAppInitDataUnsafe'
-export { useWebAppIsExpanded } from './hooks/useWebAppIsExpanded'
-export { useIsWebAppReady } from './hooks/useWebAppIsReady'
-export { useWebAppScanQrPopup } from './hooks/useWebAppScanQrPopup'
-export { useWebAppShowConfirm } from './hooks/useWebAppShowConfirm'
-export { useWebAppShowPopup } from './hooks/useWebAppShowPopup'
-export { useWebAppStartParam } from './hooks/useWebAppStartParam'
-export { useWebAppTheme } from './hooks/useWebAppTheme';
 export { useWebAppUser } from './hooks/useWebAppUser'
+export { useWebAppChat } from './hooks/useWebAppChat'
+export { useWebAppTheme } from './hooks/useWebAppTheme';
 export { useWebAppViewport } from './hooks/useWebAppViewport'
+export { useWebAppShowPopup } from './hooks/useWebAppShowPopup'
+export { useWebAppShowConfirm } from './hooks/useWebAppShowConfirm'
+export { useWebAppScanQrPopup } from './hooks/useWebAppScanQrPopup'
+export { useWebAppClosingConfirmation } from './hooks/useWebAppClosingConfirmation'
+export { useWebAppIsExpanded } from './hooks/useWebAppIsExpanded'
+export { useWebAppHapticFeedback } from './hooks/useWebAppHapticFeedback'
+export { useWebAppStartParam } from './hooks/useWebAppStartParam'

@@ -1,43 +1,43 @@
 import { FC, useEffect } from 'react';
 import { useTelegramWebApp } from '../context/TelegramWebAppContext';
-// Тип пропсов для компонента BackButton
+
 interface BackButtonProps {
-  // Обработчик события нажатия кнопки назад
   onClick: () => void;
 }
 
-// Рендерит компонент BackButton в приложении React
 const WebAppBackButton: FC<BackButtonProps> = ({ onClick }) => {
 
-    const webApp = useTelegramWebApp();
+	// access the Telegram Web App instance
+	const webApp = useTelegramWebApp();
 
-    // Получение экземпляра BackButton из Telegram Web App
-    const backButton = webApp?.BackButton;
+	// retrieve the BackButton object from the Telegram Web App
+	const backButton = webApp?.BackButton;
 
-    // Если BackButton недоступен, компонент не отрендерится
-    if (!backButton) return null;
+	// return null if the BackButton is not available
+	if (!backButton) return null;
 
-    // Отображение BackButton и подписка на событие onClick
-    useEffect(() => {
+	// show the BackButton and subscribe to the onClick event
+	useEffect(() => {
 
-        if(onClick){
-            backButton.onClick(onClick);
-        }
+		// attach the onClick event handler
+		if(onClick){
+			backButton.onClick(onClick);
+		}
 
-        backButton.show();
+		// show the BackButton component
+		backButton.show();
 
-        return () => {
-            backButton.hide();
-            
-            if(onClick){
-                backButton.offClick(onClick);
-            }
-            
-        };
+		// remove the onClick event handler and hide the BackButton component on unmount
+		return () => {
+			backButton.hide();
+			if(onClick){
+				backButton.offClick(onClick);
+			}
+		};
 
-    }, [onClick]);
+	}, [onClick]);
 
-    return null;
+	return null;
 };
 
 export default WebAppBackButton;

@@ -1,6 +1,6 @@
 {
   "name": "@kloktunov/react-telegram-webapp",
-  "version": "1.0.3",
+  "version": "1.0.12",
   "description": "Library for Telegram WebApp",
   "source": "src/index.ts",
   "type": "module",
@@ -10,7 +10,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "microbundle --jsx",
-    "dev": "microbundle watch"
+    "dev": "microbundle watch",
+    "pub": "yarn build; npm publish"
   },
   "np": {
     "publish": false,
