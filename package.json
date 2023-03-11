@@ -1,6 +1,6 @@
 {
   "name": "@kloktunov/react-telegram-webapp",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Library for Telegram WebApp",
   "source": "src/index.ts",
   "type": "module",
