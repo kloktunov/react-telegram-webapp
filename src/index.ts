@@ -22,3 +22,4 @@ export { useWebAppClosingConfirmation } from './hooks/useWebAppClosingConfirmati
 export { useWebAppIsExpanded } from './hooks/useWebAppIsExpanded'
 export { useWebAppHapticFeedback } from './hooks/useWebAppHapticFeedback'
 export { useWebAppStartParam } from './hooks/useWebAppStartParam'
+export { useWebAppPlatform } from './hooks/useWebAppPlatform';
