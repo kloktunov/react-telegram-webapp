@@ -45,6 +45,8 @@ export namespace TelegramWebApps {
 
 		isClosingConfirmationEnabled: boolean;
 
+		platform: Platform;
+
 		/**
 		 * The version of the Bot API available in the user's Telegram app.
 		 */
@@ -105,6 +107,8 @@ export namespace TelegramWebApps {
 		
 	}
 
+	export type Platform = 'android' | 'android_x' | 'ios' | 'macos' | 'tdesktop' | 'webk' | 'webz' | 'unigram' | 'unknown';
+
 	export interface PopupParams {
 		title?: string;
 		message: string;
@@ -130,7 +134,9 @@ export namespace TelegramWebApps {
 	
 	export type CloseScanQrPopupFunction = () => void;
 
+	
 	export type ColorScheme = "light" | "dark" | undefined;
+
 
 	export interface ThemeParams {
 		/**
