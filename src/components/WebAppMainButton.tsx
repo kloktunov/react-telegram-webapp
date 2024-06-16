@@ -1,5 +1,6 @@
 import { FC, useEffect } from 'react';
 import { useTelegramWebApp } from '../context/TelegramWebAppContext';
+import React from 'react';
 
 // Define the props for the MainButton component
 interface MainButtonProps {
@@ -18,14 +19,14 @@ interface MainButtonProps {
 }
 
 // Renders the MainButton component in a React application
-const WebAppMainButton: FC<MainButtonProps> = ({
+const WebAppMainButton = ({
 	text = 'CONTINUE',
 	progress = false,
 	disable = false,
 	color,
 	textColor,
 	onClick,
-}) => {
+}: MainButtonProps) => {
 	
 	// Get the instance of MainButton from Telegram Web App
 	const webApp = useTelegramWebApp();
@@ -93,7 +94,8 @@ const WebAppMainButton: FC<MainButtonProps> = ({
 		};
 	}, []);
 
-	return null;
+	return <></>;
+
 	
 };
 

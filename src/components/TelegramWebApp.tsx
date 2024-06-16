@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { ComponentType, useEffect, useState } from "react";
 import { TelegramWebAppContext, TelegramWebAppModel } from "../context/TelegramWebAppContext";
 import { TelegramWebApps } from "../telegram-webapps";
@@ -13,6 +13,58 @@ type TelegramWebAppProps = {
 export function TelegramWebApp({ children }: TelegramWebAppProps) {
 	// State hook to track if the Telegram web app is ready
 	const [isReady, setIsReady] = useState(false);
+	const [backButtonListeners, setBackButtonListeners] = useState<(() => void)[]>([]);
+
+	useEffect(() => {
+
+		if(!isReady) return;
+
+		const webApp = (window as any)?.Telegram?.WebApp as TelegramWebApps.WebApp;
+
+		if(!webApp) return;
+
+		backButtonListeners.forEach((listener) => {
+			console.log("[BACKBUTTON] Remove listener: ", listener);
+			webApp.BackButton.offClick(listener);
+		});
+
+		if(backButtonListeners.length > 0) {
+			webApp.BackButton.onClick(backButtonListeners[0]);
+
+			if(!webApp.BackButton.isVisible){
+				webApp.BackButton.show();
+			}
+		} else {
+			webApp.BackButton.hide();
+		}
+
+		return () => {
+
+			if(backButtonListeners.length == 0 && webApp?.BackButton.isVisible) {
+				webApp?.BackButton.hide();
+			}
+
+			backButtonListeners.forEach(listener => {
+				webApp.BackButton.offClick(listener);
+			});
+		}
+	}, [isReady, backButtonListeners]);
+
+	const addBackButtonListener = (listener: () => void) => {
+
+		setBackButtonListeners((prev) => {
+			return [listener, ...prev];
+		});
+
+	}
+
+	const removeBackButtonListener = (listener: () => void) => {
+		setBackButtonListeners((prev) => {
+			const index = prev.indexOf(listener);
+
+			return prev.filter((_, i) => i !== index);
+		});
+	}
 
 	// The model that contains the Telegram web app and its ready state
 	const model: TelegramWebAppModel = {
@@ -26,8 +78,12 @@ export function TelegramWebApp({ children }: TelegramWebAppProps) {
 			return (window as any)?.Telegram?.WebApp as TelegramWebApps.WebApp;
 		},
 		// The ready state of the Telegram web app
-		isReady
+		isReady,
+		addBackButtonListener,
+		removeBackButtonListener,
 	};
+
+	
 
 	// A function that sets the ready state to true
 	const onReady = () => {
