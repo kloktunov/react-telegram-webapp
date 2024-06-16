@@ -11,7 +11,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
 		"build": "microbundle --jsx React.createElement --jsxFragment React.Fragment --jsxImportSource react",
 		"dev": "NODE_ENV=dev; microbundle watch --jsx React.createElement --jsxFragment React.Fragment --jsxImportSource react",
-    "pub": "yarn build; npm publish"
+    "pub": "yarn build; npm publish --access=public"
   },
   "np": {
     "publish": false,
