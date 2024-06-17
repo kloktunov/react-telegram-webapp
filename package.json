@@ -1,6 +1,6 @@
 {
   "name": "@kloktunov/react-telegram-webapp",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Library for Telegram WebApp",
   "source": "src/index.ts",
   "type": "module",
@@ -9,8 +9,8 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-		"build": "microbundle --jsx React.createElement --jsxFragment React.Fragment --jsxImportSource react",
-		"dev": "NODE_ENV=dev; microbundle watch --jsx React.createElement --jsxFragment React.Fragment --jsxImportSource react",
+    "build": "microbundle --jsx React.createElement --jsxFragment React.Fragment --jsxImportSource react",
+    "dev": "NODE_ENV=dev; microbundle watch --jsx React.createElement --jsxFragment React.Fragment --jsxImportSource react",
     "pub": "yarn build; npm publish --access=public"
   },
   "np": {
@@ -20,10 +20,10 @@
   "author": "kloktunov",
   "license": "MIT",
   "devDependencies": {
-    "@types/react": "^18.0.27",
+    "@types/react": "^18.3.3",
     "microbundle": "^0.15.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "typescript": "^4.1.2"
   },
   "peerDependencies": {

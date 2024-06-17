@@ -2,6 +2,7 @@ import React, { useCallback } from "react";
 import { ComponentType, useEffect, useState } from "react";
 import { TelegramWebAppContext, TelegramWebAppModel } from "../context/TelegramWebAppContext";
 import { TelegramWebApps } from "../telegram-webapps";
+import { MainButtonProps } from "./WebAppMainButton";
 
 
 // Define the properties for the component TelegramWebApp
@@ -14,6 +15,7 @@ export function TelegramWebApp({ children }: TelegramWebAppProps) {
 	// State hook to track if the Telegram web app is ready
 	const [isReady, setIsReady] = useState(false);
 	const [backButtonListeners, setBackButtonListeners] = useState<(() => void)[]>([]);
+	const [mainButtons, setMainButtons] = useState<MainButtonProps[]>([]);
 
 	useEffect(() => {
 
@@ -24,8 +26,13 @@ export function TelegramWebApp({ children }: TelegramWebAppProps) {
 		if(!webApp) return;
 
 		backButtonListeners.forEach((listener) => {
-			console.log("[BACKBUTTON] Remove listener: ", listener);
 			webApp.BackButton.offClick(listener);
+		});
+
+		mainButtons.forEach((button) => {
+			if(button.onClick){
+				webApp.MainButton.offClick(button.onClick);
+			}
 		});
 
 		if(backButtonListeners.length > 0) {
@@ -38,6 +45,43 @@ export function TelegramWebApp({ children }: TelegramWebAppProps) {
 			webApp.BackButton.hide();
 		}
 
+		if(mainButtons.length > 0) {
+
+			let first = mainButtons[0];
+			let webAppMainButton = webApp.MainButton;
+
+			if(first.onClick){
+				webAppMainButton.onClick(first.onClick);
+			}
+
+			webApp.MainButton.setText(first.text || 'CONTINUE');
+			
+			if (webAppMainButton.isActive && first.disable) {
+				webAppMainButton.disable();
+			} else if (!webAppMainButton.isActive && !first.disable) {
+				webAppMainButton.enable();
+			}
+
+			if (!webAppMainButton.isProgressVisible && first.progress) {
+				webAppMainButton.showProgress(false);
+			} else if (webAppMainButton.isProgressVisible && !first.progress) {
+				webAppMainButton.hideProgress();
+			}
+
+			webAppMainButton.setParams({
+				text_color: first.textColor || webApp.themeParams.button_text_color,
+				color: first.color || webApp.themeParams.button_color,
+			});
+	
+
+			if(!webAppMainButton.isVisible) {
+				webAppMainButton.show();
+			}
+
+		} else {
+			webApp.MainButton.hide();
+		}
+
 		return () => {
 
 			if(backButtonListeners.length == 0 && webApp?.BackButton.isVisible) {
@@ -47,8 +91,18 @@ export function TelegramWebApp({ children }: TelegramWebAppProps) {
 			backButtonListeners.forEach(listener => {
 				webApp.BackButton.offClick(listener);
 			});
+
+			if(mainButtons.length == 0 && webApp?.MainButton.isVisible) {
+				webApp?.MainButton.hide();
+			}
+
+			mainButtons.forEach((button) => {
+				if(button.onClick){
+					webApp.MainButton.offClick(button.onClick);
+				}
+			});
 		}
-	}, [isReady, backButtonListeners]);
+	}, [isReady, backButtonListeners, mainButtons]);
 
 	const addBackButtonListener = (listener: () => void) => {
 
@@ -61,6 +115,22 @@ export function TelegramWebApp({ children }: TelegramWebAppProps) {
 	const removeBackButtonListener = (listener: () => void) => {
 		setBackButtonListeners((prev) => {
 			const index = prev.indexOf(listener);
+
+			return prev.filter((_, i) => i !== index);
+		});
+	}
+
+	const addMainButton = (props: MainButtonProps) => {
+
+		setMainButtons((prev) => {
+			return [props, ...prev];
+		});
+
+	}
+
+	const removeMainButton = (props: MainButtonProps) => {
+		setMainButtons((prev) => {
+			const index = prev.indexOf(props);
 
 			return prev.filter((_, i) => i !== index);
 		});
@@ -81,6 +151,8 @@ export function TelegramWebApp({ children }: TelegramWebAppProps) {
 		isReady,
 		addBackButtonListener,
 		removeBackButtonListener,
+		addMainButton,
+		removeMainButton
 	};
 
 	
