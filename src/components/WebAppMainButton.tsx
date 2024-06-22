@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAddMainButton, useRemoveMainButton, useTelegramWebApp } from '../context/TelegramWebAppContext';
 import React from 'react';
 
@@ -20,14 +20,6 @@ export interface MainButtonProps {
 
 // Renders the MainButton component in a React application
 const WebAppMainButton = (props: MainButtonProps)  => {
-	
-	// Get the instance of MainButton from Telegram Web App
-	const webApp = useTelegramWebApp();
-	const webAppMainButton = webApp?.MainButton;
-
-	// If MainButton is not available, the component will not be rendered
-	if (!webAppMainButton || !webApp) return null;
-
 
 	const addMainButton = useAddMainButton();
 	const removeMainButton = useRemoveMainButton();
