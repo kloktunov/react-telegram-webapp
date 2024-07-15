@@ -8,11 +8,11 @@ export const useWebAppTheme = () => {
 
     const [colorScheme, setColorScheme] = useState<TelegramWebApps.ColorScheme>(webApp?.colorScheme || 'light');
 
-    const [themeParams, setThemeParams] = useState<TelegramWebApps.ThemeParams>(webApp?.themeParams || {});
+    const [themeParams, setThemeParams] = useState<TelegramWebApps.ThemeParams>(webApp?.themeParams || {} as TelegramWebApps.ThemeParams);
 
     const handleChange = () => {
         setColorScheme(webApp?.colorScheme || 'light');
-        setThemeParams(webApp?.themeParams || {});
+        setThemeParams({} as TelegramWebApps.ThemeParams);
     };
 
     useEffect(() => {

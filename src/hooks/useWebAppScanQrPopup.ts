@@ -12,7 +12,10 @@ export const useWebAppScanQrPopup = () => {
 
             try {
 
-                webApp?.showScanQrPopup(params, (result) => resolve(result));
+                webApp?.showScanQrPopup(params, (result): boolean => {
+					resolve(result);
+					return true;
+				});
 
             } catch (e) {
 

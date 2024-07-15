@@ -6,21 +6,19 @@ export const useWebAppHapticFeedback = (): TelegramWebApps.HapticFeedback => {
 
     const webApp = useTelegramWebApp();
 
-    const impactOccurred = useCallback((style: "light" | "medium" | "heavy" | "rigid" | "soft") => {
-        
-        webApp?.HapticFeedback.impactOccurred(style);
-
+    const impactOccurred = useCallback((style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'): TelegramWebApps.HapticFeedback | undefined  => {
+        return webApp?.HapticFeedback.impactOccurred(style);
     }, [webApp])
 
-    const notificationOccurred = useCallback((type: "error" | "success" | "warning") => {
+    const notificationOccurred = useCallback((type: 'error' | 'success' | 'warning'): TelegramWebApps.HapticFeedback | undefined => {
         
-        webApp?.HapticFeedback.notificationOccurred(type);
+        return webApp?.HapticFeedback.notificationOccurred(type);
 
     }, [webApp]);
 
-    const selectionChanged = useCallback(() => {
+    const selectionChanged = useCallback((): TelegramWebApps.HapticFeedback | undefined => {
         
-        webApp?.HapticFeedback.selectionChanged();
+        return webApp?.HapticFeedback.selectionChanged();
 
     }, [webApp]);
 
