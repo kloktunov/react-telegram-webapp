@@ -23,3 +23,4 @@ export { useWebAppIsExpanded } from './hooks/useWebAppIsExpanded'
 export { useWebAppHapticFeedback } from './hooks/useWebAppHapticFeedback'
 export { useWebAppStartParam } from './hooks/useWebAppStartParam'
 export { useWebAppPlatform } from './hooks/useWebAppPlatform';
+export { useWebAppVerticalSwipes } from './hooks/useWebAppVerticalSwipes'
