@@ -12,7 +12,7 @@ export const useWebAppTheme = () => {
 
     const handleChange = () => {
         setColorScheme(webApp?.colorScheme || 'light');
-        setThemeParams({} as TelegramWebApps.ThemeParams);
+        setThemeParams(webApp?.themeParams || {} as TelegramWebApps.ThemeParams);
     };
 
     useEffect(() => {
