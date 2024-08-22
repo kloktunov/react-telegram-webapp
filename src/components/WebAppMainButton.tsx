@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAddMainButton, useRemoveMainButton, useTelegramWebApp } from '../context/TelegramWebAppContext';
 import React from 'react';
 
@@ -17,25 +17,31 @@ export interface MainButtonProps {
 	// The text color of the button
 	textColor?: string;
 }
-
 // Renders the MainButton component in a React application
-const WebAppMainButton = (props: MainButtonProps)  => {
+const WebAppMainButton = (props: MainButtonProps) => {
 
 	const addMainButton = useAddMainButton();
 	const removeMainButton = useRemoveMainButton();
 
-	// Show the button and clean up when the component is unmounted
+	const onClickRef = useRef(props.onClick);
+
 	useEffect(() => {
-		addMainButton(props);
+		onClickRef.current = props.onClick;
+	}, [props.onClick]);
+
+	useEffect(() => {
+		const buttonProps = {
+			...props,
+			onClick: () => onClickRef.current && onClickRef.current(),
+		};
+		addMainButton(buttonProps);
 
 		return () => {
-			removeMainButton(props);
+			removeMainButton(buttonProps);
 		};
-	}, []);
+	}, [props.text, props.progress, props.disable, props.color, props.textColor]);
 
 	return null;
-
-	
 };
 
 
