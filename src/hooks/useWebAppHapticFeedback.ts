@@ -2,6 +2,14 @@ import { useCallback } from "react";
 import { useTelegramWebApp } from "../context/TelegramWebAppContext";
 import { TelegramWebApps } from "../telegram-webapps";
 
+// impactOccurred: (
+//     style: "light" | "medium" | "heavy" | "rigid" | "soft"
+//   ) => HapticFeedback;
+//   notificationOccurred: (
+//     type: "error" | "success" | "warning"
+//   ) => HapticFeedback;
+//   selectionChanged: () => HapticFeedback;
+
 export const useWebAppHapticFeedback = (): TelegramWebApps.HapticFeedback => {
 
     const webApp = useTelegramWebApp();

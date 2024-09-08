@@ -6,7 +6,7 @@ export const useWebAppTheme = () => {
     
     const webApp = useTelegramWebApp();
 
-    const [colorScheme, setColorScheme] = useState<TelegramWebApps.ColorScheme>(webApp?.colorScheme || 'light');
+    const [colorScheme, setColorScheme] = useState<TelegramWebApps.WebApp['colorScheme']>(webApp?.colorScheme || 'light');
 
     const [themeParams, setThemeParams] = useState<TelegramWebApps.ThemeParams>(webApp?.themeParams || {} as TelegramWebApps.ThemeParams);
 

@@ -12,7 +12,7 @@ export const useWebAppScanQrPopup = () => {
 
             try {
 
-                webApp?.showScanQrPopup(params, (result): boolean => {
+                webApp?.showScanQrPopup(params, (result) => {
 					resolve(result);
 					return true;
 				});

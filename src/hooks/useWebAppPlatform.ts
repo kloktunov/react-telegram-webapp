@@ -6,7 +6,7 @@ import { TelegramWebApps } from "../telegram-webapps";
 export const useWebAppPlatform = () => {
 
     const webApp = useTelegramWebApp();
-    const [platform, setPlatform] = useState<TelegramWebApps.Platform>();
+    const [platform, setPlatform] = useState<TelegramWebApps.Platforms>();
 
     useEffect(() => {
         
