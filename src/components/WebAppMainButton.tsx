@@ -16,6 +16,8 @@ export interface MainButtonProps {
 	color?: string;
 	// The text color of the button
 	textColor?: string;
+	// Whether the button has a shine effect
+	hasShineEffect?: boolean;
 }
 // Renders the MainButton component in a React application
 const WebAppMainButton = (props: MainButtonProps) => {
@@ -39,7 +41,7 @@ const WebAppMainButton = (props: MainButtonProps) => {
 		return () => {
 			removeMainButton(buttonProps);
 		};
-	}, [props.text, props.progress, props.disable, props.color, props.textColor]);
+	}, [props.text, props.progress, props.disable, props.color, props.textColor, props.hasShineEffect]);
 
 	return null;
 };

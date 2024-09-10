@@ -131,7 +131,7 @@ export declare namespace TelegramWebApps {
 		offClick: (callback: VoidFunction) => void;
 		setText: (text: string) => void;
 		setParams: (params: BottomButtonParams) => void;
-		hasShineEffect: string;
+		hasShineEffect: boolean;
 	  }
 	  
 	  export type MainButton = BottomButton;

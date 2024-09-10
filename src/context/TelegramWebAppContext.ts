@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import { TelegramWebApps } from "../telegram-webapps";
 import { MainButtonProps } from "../components/WebAppMainButton";
+import { SecondaryMainButtonProps } from "../components/WebAppSecondaryMainButton";
 
 export type TelegramWebAppModel = {
   app?: TelegramWebApps.WebApp;
@@ -9,6 +10,8 @@ export type TelegramWebAppModel = {
   removeBackButtonListener: (listener: () => void) => void;
   addMainButton: (props: MainButtonProps) => void;
   removeMainButton: (props: MainButtonProps) => void;
+  addSecondaryMainButton: (props: SecondaryMainButtonProps) => void;
+  removeSecondaryMainButton: (props: SecondaryMainButtonProps) => void;
 };
 
 
@@ -47,6 +50,24 @@ export function useRemoveMainButton() {
   return removeMainButton;
 
 }
+
+
+export function useAddSecondaryMainButton() {
+
+  const { addSecondaryMainButton } = useContext(TelegramWebAppContext);
+
+  return addSecondaryMainButton;
+
+}
+
+export function useRemoveSecondaryMainButton() {
+
+  const { removeSecondaryMainButton } = useContext(TelegramWebAppContext);
+
+  return removeSecondaryMainButton;
+
+}
+
 
 export function useTelegramWebApp() {
   const { app } = useContext(TelegramWebAppContext);

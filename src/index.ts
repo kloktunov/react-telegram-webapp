@@ -1,10 +1,12 @@
 import WebAppBackButton from './components/WebAppBackButton';
 import WebAppMainButton from './components/WebAppMainButton';
+import WebAppSecondaryMainButton from './components/WebAppSecondaryMainButton';
 
 // Components
 export { TelegramWebApp } from './components/TelegramWebApp';
 export { WebAppMainButton };
 export { WebAppBackButton };
+export { WebAppSecondaryMainButton }
 
 
 // Hooks
