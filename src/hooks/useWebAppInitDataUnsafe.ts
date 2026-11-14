@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTelegramWebApp } from "../context/TelegramWebAppContext";
+import { TelegramWebApps } from "../telegram-webapps";
+
+const STORAGE_KEY = 'init-data-unsafe';
 
 export const useWebAppInitDataUnsafe = () => {
 
@@ -9,24 +12,39 @@ export const useWebAppInitDataUnsafe = () => {
 
     useEffect(() => {
 
-        setInitDataUnsafe(webApp?.initDataUnsafe);
+        // Inside Telegram — always the current launch data (user, start_param, chat).
+        // Before 1.3 the cache was used whenever query_id was missing, i.e. on most launches,
+        // so a previous launch (or another account on the same device) leaked into the current one.
+        if (webApp?.initData) {
 
-        if(webApp?.initDataUnsafe?.query_id){
-        
-            localStorage.setItem('init-data-unsafe', JSON.stringify(webApp?.initDataUnsafe));
-    
-        } else {
-
-            const storageData = localStorage.getItem('init-data-unsafe');
-
-            if(storageData){
-                setInitDataUnsafe(JSON.parse(storageData));
-            }
+            setInitDataUnsafe(webApp.initDataUnsafe);
+            writeCache(webApp.initDataUnsafe);
+            return;
 
         }
-    
+
+        // Outside Telegram (e.g. opened in a browser during development) — last known data
+        setInitDataUnsafe(readCache() ?? webApp?.initDataUnsafe);
+
     }, [webApp]);
 
-    return initDataUnsafe;   
+    return initDataUnsafe;
 
+}
+
+function readCache(): TelegramWebApps.WebAppInitData | undefined {
+    try {
+        const storageData = localStorage.getItem(STORAGE_KEY);
+        return storageData ? JSON.parse(storageData) : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+function writeCache(data: TelegramWebApps.WebAppInitData) {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+        // Storage may be unavailable in some webviews
+    }
 }

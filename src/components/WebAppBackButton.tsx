@@ -1,6 +1,5 @@
-import { useEffect } from 'react';
-import { useAddBackButtonListener, useRemoveBackButtonListener, useTelegramWebApp } from '../context/TelegramWebAppContext';
-import React from 'react';
+import { useContext, useEffect, useRef } from 'react';
+import { TelegramWebAppContext } from '../context/TelegramWebAppContext';
 
 interface BackButtonProps {
   onClick: () => void;
@@ -8,16 +7,20 @@ interface BackButtonProps {
 
 const WebAppBackButton = ({ onClick }: BackButtonProps) => {
 
-	// access the Telegram Web App instance
-	const addBackButtonListener = useAddBackButtonListener();
-	const removeBackButtonListener = useRemoveBackButtonListener();
+	const { addBackButtonListener, removeBackButtonListener } = useContext(TelegramWebAppContext);
+
+	// Always call the latest onClick, not the one from the first render
+	const onClickRef = useRef(onClick);
+	onClickRef.current = onClick;
 
 	useEffect(() => {
 
-		addBackButtonListener(onClick);
+		const listener = () => onClickRef.current();
+
+		addBackButtonListener(listener);
 
 		return () => {
-			removeBackButtonListener(onClick);
+			removeBackButtonListener(listener);
 		}
 
 	}, []);

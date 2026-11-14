@@ -53,6 +53,24 @@ const App = () => {
 
 export default App;
 ```
+
+#### Props
+| Property         | Type      | Default | Description |
+| ---------------- | --------- | ------- | ----------- |
+| autoReady        | boolean   | false   | Call `Telegram.WebApp.ready()` as soon as the script is loaded |
+| buttonsHideDelay | number    | 150     | Delay (ms) before hiding Back / Main / Secondary / Settings buttons after the last one unmounts. Prevents blinking when one screen replaces another |
+
+#### Loading `telegram-web-app.js`
+Telegram recommends loading the script in `<head>` before other scripts — it reads launch parameters
+from the URL hash, and client-side routing may change the hash before a lazily loaded script runs.
+If the script is already on the page, `TelegramWebApp` reuses it; otherwise it adds it once and
+retries on network errors. Next.js example:
+
+```tsx
+import Script from "next/script";
+
+<Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+```
 ---
 ### `WebAppBackButton`
 The component allows you to show/hide `BackButton` and configure the click handler.
@@ -132,6 +150,11 @@ export default App;
 | onClick       | () => void    |         | Callback function to be called when the button is clicked |
 | color         | string        |         | Background color of the button |
 | textColor     | string        |         | Text color of the button |
+| hasShineEffect | boolean      | false   | Shine effect (Bot API 7.10+) |
+| iconCustomEmojiId | string    |         | Custom emoji before the text (Bot API 9.5+, ignored on older clients) |
+
+When several main buttons are mounted, the most recently mounted one is shown. Since 1.3 a button
+keeps its place when its props change, so a screen in the background cannot take over the button.
 
 
 ## Hooks
@@ -499,3 +522,86 @@ const Component = () => {
 
 export default Component;
 ```
+
+---
+## Since 1.3
+
+### `WebAppSettingsButton`
+Shows the «Settings» item in the Mini App menu while mounted.
+
+```tsx
+<WebAppSettingsButton onClick={() => router.push('/settings')} />
+```
+
+### `WebAppSecondaryMainButton`
+Same props as `WebAppMainButton` plus `position`: `'left' | 'right' | 'top' | 'bottom'`.
+
+### `useWebAppFullscreen` (Bot API 8.0+)
+```tsx
+const { isSupported, isFullscreen, error, requestFullscreen, exitFullscreen } = useWebAppFullscreen();
+```
+On older clients `isSupported` is `false` and the methods do nothing.
+
+### `useWebAppSafeArea` (Bot API 8.0+)
+```tsx
+const { safeAreaInset, contentSafeAreaInset } = useWebAppSafeArea(); // { top, bottom, left, right }
+```
+Also available in CSS: `var(--tg-safe-area-inset-top)`, `var(--tg-content-safe-area-inset-top)`, …
+
+### `useWebAppIsActive` (Bot API 8.0+)
+`false` while the Mini App is minimized; always `true` on older clients.
+
+### `useWebAppOrientation` (Bot API 8.0+)
+```tsx
+const { isSupported, isOrientationLocked, lockOrientation, unlockOrientation } = useWebAppOrientation();
+```
+
+### `useWebAppHomeScreen` (Bot API 8.0+)
+```tsx
+const { isSupported, status, addToHomeScreen, checkHomeScreenStatus } = useWebAppHomeScreen();
+const status = await checkHomeScreenStatus(); // 'unsupported' | 'unknown' | 'added' | 'missed'
+```
+
+### `useWebAppCloudStorage` / `useWebAppDeviceStorage`
+Promise wrappers over `CloudStorage` (Bot API 6.9+) and `DeviceStorage` (Bot API 9.0+).
+
+```tsx
+const storage = useWebAppCloudStorage();
+await storage.setItem('key', 'value');
+const value = await storage.getItem('key');
+```
+
+### `useWebAppVersion`
+```tsx
+const { version, isVersionAtLeast } = useWebAppVersion();
+```
+
+### `useWebAppEvent`
+Subscribes to any `Telegram.WebApp` event while mounted, always calling the latest handler.
+
+```tsx
+useWebAppEvent('themeChanged', () => console.log('theme changed'));
+```
+
+### `useWebAppViewport`
+Now also returns `viewportStableHeight`.
+
+## Changelog
+
+### 1.3.0
+Backward compatible: all 1.2 exports and props work as before.
+
+**Fixed**
+- `WebAppBackButton` called the `onClick` from its first render; now always the latest one.
+- Back / Main / Secondary buttons no longer hide and show again when one screen replaces another (`buttonsHideDelay`).
+- A main button that updated its props moved to the top of the stack and replaced the button of the screen on top.
+- `useWebAppInitDataUnsafe` (and `useWebAppUser`, `useWebAppStartParam`, `useWebAppChat`) returned data cached from a previous launch whenever `query_id` was missing — i.e. on most launches. The cache is now used only outside Telegram.
+- `useWebAppTheme` could miss theme changes when Telegram mutated the same `themeParams` object.
+- `telegram-web-app.js` was added again on every `TelegramWebApp` mount (twice in StrictMode) and never retried after a network error. It is now loaded once, reused if already on the page, and retried.
+- The context value was recreated on every render.
+
+**Added**
+- Bot API 8.0–9.6 types: fullscreen, safe areas, orientation, home screen, emoji status, file download, `DeviceStorage`, `SecureStorage`, `hideKeyboard`, button `iconCustomEmojiId`.
+- `WebAppSettingsButton`, `useWebAppFullscreen`, `useWebAppSafeArea`, `useWebAppIsActive`, `useWebAppOrientation`, `useWebAppHomeScreen`, `useWebAppCloudStorage`, `useWebAppDeviceStorage`, `useWebAppVersion`, `useWebAppEvent`.
+- `TelegramWebApp` props `autoReady`, `buttonsHideDelay`; `iconCustomEmojiId` for main and secondary buttons.
+- Exported types `TelegramWebApps`, `MainButtonProps`, `SecondaryMainButtonProps` and `withTelegramWebApp`.

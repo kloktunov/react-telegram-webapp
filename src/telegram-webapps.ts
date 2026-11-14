@@ -112,6 +112,8 @@ export declare namespace TelegramWebApps {
 		is_active?: boolean;
 		is_visible?: boolean;
 		has_shine_effect?: boolean;
+		// Bot API 9.5+
+		icon_custom_emoji_id?: string;
 	  };
 	  
 	  export interface BottomButton {
@@ -132,6 +134,8 @@ export declare namespace TelegramWebApps {
 		setText: (text: string) => void;
 		setParams: (params: BottomButtonParams) => void;
 		hasShineEffect: boolean;
+		// Bot API 9.5+
+		iconCustomEmojiId?: string;
 	  }
 	  
 	  export type MainButton = BottomButton;
@@ -168,7 +172,16 @@ export declare namespace TelegramWebApps {
 		| "clipboardTextReceived"
 		| "writeAccessRequested"
 		| "contactRequested"
-		| "scanQrPopupClosed";
+		| "scanQrPopupClosed"
+		// Bot API 8.0+
+		| "activated"
+		| "deactivated"
+		| "safeAreaChanged"
+		| "contentSafeAreaChanged"
+		| "fullscreenChanged"
+		| "fullscreenFailed"
+		| "homeScreenAdded"
+		| "homeScreenChecked";
 	  
 	  export type EventParams = {
 		invoiceClosed: { url: string; status: InvoiceStatuses };
@@ -184,7 +197,85 @@ export declare namespace TelegramWebApps {
 		writeAccessRequested: { status: "allowed" | "cancelled" };
 		contactRequested: { status: "sent" | "cancelled" };
 		scanQrPopupClosed: void;
+		activated: void;
+		deactivated: void;
+		safeAreaChanged: void;
+		contentSafeAreaChanged: void;
+		fullscreenChanged: void;
+		fullscreenFailed: { error: FullscreenError };
+		homeScreenAdded: void;
+		homeScreenChecked: { status: HomeScreenStatus };
 	  };
+
+	  // Bot API 8.0+
+	  export type SafeAreaInset = {
+		top: number;
+		bottom: number;
+		left: number;
+		right: number;
+	  };
+
+	  export type ContentSafeAreaInset = SafeAreaInset;
+
+	  export type FullscreenError = "UNSUPPORTED" | "ALREADY_FULLSCREEN" | string;
+
+	  export type HomeScreenStatus = "unsupported" | "unknown" | "added" | "missed";
+
+	  export type EmojiStatusParams = {
+		duration?: number;
+	  };
+
+	  export type DownloadFileParams = {
+		url: string;
+		file_name: string;
+	  };
+
+	  // Bot API 9.0+
+	  export interface DeviceStorage {
+		setItem: (
+		  key: string,
+		  value: string,
+		  callback?: (error: string | null, success?: boolean) => void
+		) => DeviceStorage;
+		getItem: (
+		  key: string,
+		  callback: (error: string | null, value?: string | null) => void
+		) => DeviceStorage;
+		removeItem: (
+		  key: string,
+		  callback?: (error: string | null, success?: boolean) => void
+		) => DeviceStorage;
+		clear: (
+		  callback?: (error: string | null, success?: boolean) => void
+		) => DeviceStorage;
+	  }
+
+	  export interface SecureStorage {
+		setItem: (
+		  key: string,
+		  value: string,
+		  callback?: (error: string | null, success?: boolean) => void
+		) => SecureStorage;
+		getItem: (
+		  key: string,
+		  callback: (
+			error: string | null,
+			value?: string | null,
+			canRestore?: boolean
+		  ) => void
+		) => SecureStorage;
+		restoreItem: (
+		  key: string,
+		  callback?: (error: string | null, value?: string | null) => void
+		) => SecureStorage;
+		removeItem: (
+		  key: string,
+		  callback?: (error: string | null, success?: boolean) => void
+		) => SecureStorage;
+		clear: (
+		  callback?: (error: string | null, success?: boolean) => void
+		) => SecureStorage;
+	  }
 	  
 	  export type PopupParams = {
 		title?: string;
@@ -332,6 +423,37 @@ export declare namespace TelegramWebApps {
 		shareToStory: (mediaURL: string, params?: ShareStoryParams) => void;
 		bottomBarColor: string;
 		setBottomBarColor: (bottomBarColor: string) => void;
+
+		// Bot API 8.0+
+		isActive?: boolean;
+		isFullscreen?: boolean;
+		isOrientationLocked?: boolean;
+		safeAreaInset?: SafeAreaInset;
+		contentSafeAreaInset?: ContentSafeAreaInset;
+		requestFullscreen: VoidFunction;
+		exitFullscreen: VoidFunction;
+		lockOrientation: VoidFunction;
+		unlockOrientation: VoidFunction;
+		addToHomeScreen: VoidFunction;
+		checkHomeScreenStatus: (callback?: (status: HomeScreenStatus) => unknown) => void;
+		shareMessage: (msgId: string, callback?: (sent: boolean) => unknown) => void;
+		setEmojiStatus: (
+		  customEmojiId: string,
+		  params?: EmojiStatusParams,
+		  callback?: (set: boolean) => unknown
+		) => void;
+		requestEmojiStatusAccess: (callback?: (allowed: boolean) => unknown) => void;
+		downloadFile: (
+		  params: DownloadFileParams,
+		  callback?: (accepted: boolean) => unknown
+		) => void;
+
+		// Bot API 9.0+
+		DeviceStorage?: DeviceStorage;
+		SecureStorage?: SecureStorage;
+
+		// Bot API 9.1+
+		hideKeyboard: VoidFunction;
 	  }
 	  
 	  export interface Telegram {

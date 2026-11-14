@@ -1,13 +1,19 @@
 import WebAppBackButton from './components/WebAppBackButton';
 import WebAppMainButton from './components/WebAppMainButton';
 import WebAppSecondaryMainButton from './components/WebAppSecondaryMainButton';
+import WebAppSettingsButton from './components/WebAppSettingsButton';
 
 // Components
-export { TelegramWebApp } from './components/TelegramWebApp';
+export { TelegramWebApp, withTelegramWebApp } from './components/TelegramWebApp';
 export { WebAppMainButton };
 export { WebAppBackButton };
 export { WebAppSecondaryMainButton }
+export { WebAppSettingsButton }
 
+// Types
+export type { TelegramWebApps } from './telegram-webapps';
+export type { MainButtonProps } from './components/WebAppMainButton';
+export type { SecondaryMainButtonProps } from './components/WebAppSecondaryMainButton';
 
 // Hooks
 export { useTelegramWebApp } from './context/TelegramWebAppContext';
@@ -26,3 +32,14 @@ export { useWebAppHapticFeedback } from './hooks/useWebAppHapticFeedback'
 export { useWebAppStartParam } from './hooks/useWebAppStartParam'
 export { useWebAppPlatform } from './hooks/useWebAppPlatform';
 export { useWebAppVerticalSwipes } from './hooks/useWebAppVerticalSwipes'
+
+// Hooks — 1.3
+export { useWebAppEvent } from './hooks/useWebAppEvent'
+export { useWebAppVersion } from './hooks/useWebAppVersion'
+export { useWebAppIsActive } from './hooks/useWebAppIsActive'
+export { useWebAppFullscreen } from './hooks/useWebAppFullscreen'
+export { useWebAppSafeArea } from './hooks/useWebAppSafeArea'
+export { useWebAppOrientation } from './hooks/useWebAppOrientation'
+export { useWebAppHomeScreen } from './hooks/useWebAppHomeScreen'
+export { useWebAppCloudStorage } from './hooks/useWebAppCloudStorage'
+export { useWebAppDeviceStorage } from './hooks/useWebAppDeviceStorage'
