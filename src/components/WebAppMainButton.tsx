@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useAddMainButton, useRemoveMainButton, useTelegramWebApp } from '../context/TelegramWebAppContext';
-import React from 'react';
+import { useContext, useEffect, useMemo, useRef } from 'react';
+import { TelegramWebAppContext } from '../context/TelegramWebAppContext';
 
 // Define the props for the MainButton component
 export interface MainButtonProps {
@@ -18,30 +17,47 @@ export interface MainButtonProps {
 	textColor?: string;
 	// Whether the button has a shine effect
 	hasShineEffect?: boolean;
+	// Custom emoji shown before the text (Bot API 9.5+, ignored on older clients)
+	iconCustomEmojiId?: string;
 }
 // Renders the MainButton component in a React application
 const WebAppMainButton = (props: MainButtonProps) => {
 
-	const addMainButton = useAddMainButton();
-	const removeMainButton = useRemoveMainButton();
+	const { registerMainButton, updateMainButton, unregisterMainButton } = useContext(TelegramWebAppContext);
 
 	const onClickRef = useRef(props.onClick);
+	onClickRef.current = props.onClick;
 
-	useEffect(() => {
-		onClickRef.current = props.onClick;
-	}, [props.onClick]);
+	const buttonProps = useMemo<MainButtonProps>(() => ({
+		...props,
+		onClick: () => onClickRef.current && onClickRef.current(),
+	}), [props.text, props.progress, props.disable, props.color, props.textColor, props.hasShineEffect, props.iconCustomEmojiId]);
 
+	const idRef = useRef<number | null>(null);
+
+	// Register once: props changes update the button in place instead of moving it to the top
 	useEffect(() => {
-		const buttonProps = {
-			...props,
-			onClick: () => onClickRef.current && onClickRef.current(),
-		};
-		addMainButton(buttonProps);
+		const id = registerMainButton(buttonProps);
+		idRef.current = id;
 
 		return () => {
-			removeMainButton(buttonProps);
+			idRef.current = null;
+			unregisterMainButton(id);
 		};
-	}, [props.text, props.progress, props.disable, props.color, props.textColor, props.hasShineEffect]);
+	}, []);
+
+	const isFirstRender = useRef(true);
+
+	useEffect(() => {
+		if (isFirstRender.current) {
+			isFirstRender.current = false;
+			return;
+		}
+
+		if (idRef.current !== null) {
+			updateMainButton(idRef.current, buttonProps);
+		}
+	}, [buttonProps]);
 
 	return null;
 };

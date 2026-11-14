@@ -7,20 +7,21 @@ export const useWebAppViewport = () => {
 
     const [viewportHeight, setViewportHeight]  = useState(webApp?.viewportHeight);
 
+    const [viewportStableHeight, setViewportStableHeight] = useState(webApp?.viewportStableHeight);
+
     const [isStateStable, setIsStateStable] = useState(webApp?.viewportStableHeight == webApp?.viewportHeight);
-    
+
     useEffect(() => {
 
         const handleChange = (state: { isStateStable: boolean }) => {
 
             setViewportHeight(webApp?.viewportHeight);
+            setViewportStableHeight(webApp?.viewportStableHeight);
             setIsStateStable(state.isStateStable);
 
         };
 
         handleChange({ isStateStable: webApp?.viewportStableHeight == webApp?.viewportHeight });
-
-        setViewportHeight(webApp?.viewportHeight);
 
         webApp?.onEvent('viewportChanged', handleChange);
 
@@ -30,6 +31,7 @@ export const useWebAppViewport = () => {
 
     return {
         viewportHeight,
+        viewportStableHeight,
         isStateStable
     }
 

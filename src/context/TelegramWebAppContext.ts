@@ -8,10 +8,20 @@ export type TelegramWebAppModel = {
   isReady: boolean;
   addBackButtonListener: (listener: () => void) => void;
   removeBackButtonListener: (listener: () => void) => void;
+  addSettingsButtonListener: (listener: () => void) => void;
+  removeSettingsButtonListener: (listener: () => void) => void;
+  // Pre-1.3 API, kept for compatibility
   addMainButton: (props: MainButtonProps) => void;
   removeMainButton: (props: MainButtonProps) => void;
   addSecondaryMainButton: (props: SecondaryMainButtonProps) => void;
   removeSecondaryMainButton: (props: SecondaryMainButtonProps) => void;
+  // A registered button keeps its place in the stack when its props change
+  registerMainButton: (props: MainButtonProps) => number;
+  updateMainButton: (id: number, props: MainButtonProps) => void;
+  unregisterMainButton: (id: number) => void;
+  registerSecondaryMainButton: (props: SecondaryMainButtonProps) => number;
+  updateSecondaryMainButton: (id: number, props: SecondaryMainButtonProps) => void;
+  unregisterSecondaryMainButton: (id: number) => void;
 };
 
 

@@ -1,243 +1,293 @@
-import React, { useCallback } from "react";
-import { ComponentType, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ComponentType } from "react";
 import { TelegramWebAppContext, TelegramWebAppModel } from "../context/TelegramWebAppContext";
 import { TelegramWebApps } from "../telegram-webapps";
+import { getWebApp, isVersionAtLeast, loadTelegramWebAppScript } from "../utils/webapp";
 import { MainButtonProps } from "./WebAppMainButton";
 import { SecondaryMainButtonProps } from "./WebAppSecondaryMainButton";
-
 
 // Define the properties for the component TelegramWebApp
 type TelegramWebAppProps = {
 	children: React.ReactNode;
+	// Call Telegram.WebApp.ready() as soon as the script is loaded
+	autoReady?: boolean;
+	// Delay (ms) before hiding Back / Main / Secondary / Settings buttons when the last one unmounts.
+	// Keeps buttons from blinking while one screen replaces another.
+	buttonsHideDelay?: number;
 };
 
+const DEFAULT_BUTTONS_HIDE_DELAY = 150;
+
+type ButtonEntry<T> = { id: number; props: T };
+
 // Define the component TelegramWebApp
-export function TelegramWebApp({ children }: TelegramWebAppProps) {
+export function TelegramWebApp({ children, autoReady = false, buttonsHideDelay = DEFAULT_BUTTONS_HIDE_DELAY }: TelegramWebAppProps) {
 	// State hook to track if the Telegram web app is ready
 	const [isReady, setIsReady] = useState(false);
+
+	// Newest registration goes first and wins
 	const [backButtonListeners, setBackButtonListeners] = useState<(() => void)[]>([]);
-	const [mainButtons, setMainButtons] = useState<MainButtonProps[]>([]);
-	const [secondaryMainButtons, setSecondaryMainButtons] = useState<SecondaryMainButtonProps[]>([]);
+	const [settingsButtonListeners, setSettingsButtonListeners] = useState<(() => void)[]>([]);
+	const [mainButtons, setMainButtons] = useState<ButtonEntry<MainButtonProps>[]>([]);
+	const [secondaryMainButtons, setSecondaryMainButtons] = useState<ButtonEntry<SecondaryMainButtonProps>[]>([]);
 
+	const nextButtonId = useRef(0);
+	const legacyButtonIds = useRef(new WeakMap<object, number>());
+
+	// Script loading: reuses the script if it is already on the page, retries on network errors
 	useEffect(() => {
+		let cancelled = false;
 
-		if(!isReady) return;
+		loadTelegramWebAppScript()
+			.then(() => {
+				if (cancelled) return;
 
-		const webApp = (window as any)?.Telegram?.WebApp as TelegramWebApps.WebApp;
+				if (autoReady) {
+					getWebApp()?.ready();
+				}
 
-		if(!webApp) return;
-
-		backButtonListeners.forEach((listener) => {
-			webApp.BackButton.offClick(listener);
-		});
-
-		mainButtons.forEach((button) => {
-			if(button.onClick){
-				webApp.MainButton.offClick(button.onClick);
-			}
-		});
-
-		if(backButtonListeners.length > 0) {
-			webApp.BackButton.onClick(backButtonListeners[0]);
-
-			if(!webApp.BackButton.isVisible){
-				webApp.BackButton.show();
-			}
-		} else {
-			webApp.BackButton.hide();
-		}
-
-		if(mainButtons.length > 0) {
-
-			let first = mainButtons[0];
-			let webAppMainButton = webApp.MainButton;
-
-			if(first.onClick){
-				webAppMainButton.onClick(first.onClick);
-			}
-
-			webApp.MainButton.setText(first.text || 'CONTINUE');
-			
-			if (webAppMainButton.isActive && first.disable) {
-				webAppMainButton.disable();
-			} else if (!webAppMainButton.isActive && !first.disable) {
-				webAppMainButton.enable();
-			}
-
-			if (!webAppMainButton.isProgressVisible && first.progress) {
-				webAppMainButton.showProgress(false);
-			} else if (webAppMainButton.isProgressVisible && !first.progress) {
-				webAppMainButton.hideProgress();
-			}
-
-			webAppMainButton.setParams({
-				text_color: first.textColor || webApp.themeParams.button_text_color,
-				color: first.color || webApp.themeParams.button_color,
-				has_shine_effect: first.hasShineEffect ?? false,
+				setIsReady(true);
+			})
+			.catch((e) => {
+				console.error("[react-telegram-webapp] Failed to load telegram-web-app.js", e);
 			});
-	
-
-			if(!webAppMainButton.isVisible) {
-				webAppMainButton.show();
-			}
-
-		} else {
-			webApp.MainButton.hide();
-		}
-
-		if(secondaryMainButtons.length > 0) {
-
-			let first = secondaryMainButtons[0];
-			let webAppSecondaryButton = webApp.SecondaryButton;
-
-			if(first.onClick){
-				webAppSecondaryButton.onClick(first.onClick);
-			}
-
-			webAppSecondaryButton.setText(first.text || 'CONTINUE');
-
-			if (webAppSecondaryButton.isActive && first.disable) {
-				webAppSecondaryButton.disable();
-			} else if (!webAppSecondaryButton.isActive && !first.disable) {
-				webAppSecondaryButton.enable();
-			}
-
-			if (!webAppSecondaryButton.isProgressVisible && first.progress) {
-				webAppSecondaryButton.showProgress(false);
-			} else if (webAppSecondaryButton.isProgressVisible && !first.progress) {
-				webAppSecondaryButton.hideProgress();
-			}
-
-			webAppSecondaryButton.setParams({
-				text_color: first.textColor || webApp.themeParams.button_color,
-				color: first.color || webApp.themeParams.bottom_bar_bg_color,
-				position: first.position || "left",
-				has_shine_effect: first.hasShineEffect ?? false,
-			});
-
-			if(!webAppSecondaryButton.isVisible) {
-				webAppSecondaryButton.show();
-			}
-			
-		} else {
-			webApp.SecondaryButton.hide();
-		}
 
 		return () => {
+			cancelled = true;
+		};
+	}, []);
 
-			if(backButtonListeners.length == 0 && webApp?.BackButton.isVisible) {
-				webApp?.BackButton.hide();
+	const backButtonTop = backButtonListeners[0];
+	const settingsButtonTop = settingsButtonListeners[0];
+	const mainButtonTop = mainButtons[0]?.props;
+	const secondaryMainButtonTop = secondaryMainButtons[0]?.props;
+
+	// Click handlers are registered in Telegram once and call the current top button
+	const backButtonTopRef = useRef(backButtonTop);
+	const settingsButtonTopRef = useRef(settingsButtonTop);
+	const mainButtonTopRef = useRef(mainButtonTop);
+	const secondaryMainButtonTopRef = useRef(secondaryMainButtonTop);
+
+	backButtonTopRef.current = backButtonTop;
+	settingsButtonTopRef.current = settingsButtonTop;
+	mainButtonTopRef.current = mainButtonTop;
+	secondaryMainButtonTopRef.current = secondaryMainButtonTop;
+
+	useEffect(() => {
+		if (!isReady) return;
+
+		const webApp = getWebApp();
+
+		if (!webApp) return;
+
+		const onBack = () => backButtonTopRef.current?.();
+		const onSettings = () => settingsButtonTopRef.current?.();
+		const onMain = () => mainButtonTopRef.current?.onClick?.();
+		const onSecondary = () => secondaryMainButtonTopRef.current?.onClick?.();
+
+		webApp.BackButton.onClick(onBack);
+		webApp.SettingsButton?.onClick(onSettings);
+		webApp.MainButton.onClick(onMain);
+		webApp.SecondaryButton?.onClick(onSecondary);
+
+		return () => {
+			webApp.BackButton.offClick(onBack);
+			webApp.SettingsButton?.offClick(onSettings);
+			webApp.MainButton.offClick(onMain);
+			webApp.SecondaryButton?.offClick(onSecondary);
+		};
+	}, [isReady]);
+
+	// Back button
+	const hasBackButton = !!backButtonTop;
+
+	useEffect(() => {
+		if (!isReady) return;
+
+		const backButton = getWebApp()?.BackButton;
+
+		if (!backButton) return;
+
+		if (hasBackButton) {
+			if (!backButton.isVisible) {
+				backButton.show();
 			}
-
-			backButtonListeners.forEach(listener => {
-				webApp.BackButton.offClick(listener);
-			});
-
-			if(mainButtons.length == 0 && webApp?.MainButton.isVisible) {
-				webApp?.MainButton.hide();
-			}
-
-			mainButtons.forEach((button) => {
-				if(button.onClick){
-					webApp.MainButton.offClick(button.onClick);
-				}
-			});
-
-			if(secondaryMainButtons.length == 0 && webApp?.SecondaryButton.isVisible) {
-				webApp?.SecondaryButton.hide();
-			}
-
-			secondaryMainButtons.forEach((button) => {
-				if(button.onClick){
-					webApp.SecondaryButton.offClick(button.onClick);
-				}
-			});
+			return;
 		}
-	}, [isReady, backButtonListeners, mainButtons, secondaryMainButtons]);
 
-	const addBackButtonListener = (listener: () => void) => {
-
-		setBackButtonListeners((prev) => {
-			return [listener, ...prev];
+		return deferHide(buttonsHideDelay, () => {
+			if (backButton.isVisible) {
+				backButton.hide();
+			}
 		});
+	}, [isReady, hasBackButton, buttonsHideDelay]);
 
-	}
+	// Settings button
+	const hasSettingsButton = !!settingsButtonTop;
 
-	const removeBackButtonListener = (listener: () => void) => {
-		setBackButtonListeners((prev) => {
-			const index = prev.indexOf(listener);
+	useEffect(() => {
+		if (!isReady) return;
 
-			return prev.filter((_, i) => i !== index);
+		const settingsButton = getWebApp()?.SettingsButton;
+
+		if (!settingsButton) return;
+
+		if (hasSettingsButton) {
+			if (!settingsButton.isVisible) {
+				settingsButton.show();
+			}
+			return;
+		}
+
+		return deferHide(buttonsHideDelay, () => {
+			if (settingsButton.isVisible) {
+				settingsButton.hide();
+			}
 		});
-	}
+	}, [isReady, hasSettingsButton, buttonsHideDelay]);
 
-	const addMainButton = (props: MainButtonProps) => {
+	// Main button
+	useEffect(() => {
+		if (!isReady) return;
 
-		setMainButtons((prev) => {
-			return [props, ...prev];
+		const webApp = getWebApp();
+
+		if (!webApp) return;
+
+		const button = webApp.MainButton;
+
+		if (mainButtonTop) {
+			applyBottomButton(webApp, button, mainButtonTop, {
+				text_color: mainButtonTop.textColor || webApp.themeParams.button_text_color,
+				color: mainButtonTop.color || webApp.themeParams.button_color,
+			});
+			return;
+		}
+
+		return deferHide(buttonsHideDelay, () => {
+			if (button.isVisible) {
+				button.hide();
+			}
 		});
+	}, [isReady, mainButtonTop, buttonsHideDelay]);
 
-	}
+	// Secondary button
+	useEffect(() => {
+		if (!isReady) return;
 
-	const removeMainButton = (props: MainButtonProps) => {
-		setMainButtons((prev) => {
-			const index = prev.indexOf(props);
+		const webApp = getWebApp();
+		const button = webApp?.SecondaryButton;
 
-			return prev.filter((_, i) => i !== index);
+		if (!webApp || !button) return;
+
+		if (secondaryMainButtonTop) {
+			applyBottomButton(webApp, button, secondaryMainButtonTop, {
+				text_color: secondaryMainButtonTop.textColor || webApp.themeParams.button_color,
+				color: secondaryMainButtonTop.color || webApp.themeParams.bottom_bar_bg_color,
+				position: secondaryMainButtonTop.position || "left",
+			});
+			return;
+		}
+
+		return deferHide(buttonsHideDelay, () => {
+			if (button.isVisible) {
+				button.hide();
+			}
 		});
-	}
+	}, [isReady, secondaryMainButtonTop, buttonsHideDelay]);
 
-	const addSecondaryMainButton = (props: SecondaryMainButtonProps) => {
+	// Registration
+	const addBackButtonListener = useCallback((listener: () => void) => {
+		setBackButtonListeners((prev) => [listener, ...prev]);
+	}, []);
 
-		setSecondaryMainButtons((prev) => {
-			return [props, ...prev];
-		});
+	const removeBackButtonListener = useCallback((listener: () => void) => {
+		setBackButtonListeners((prev) => removeFirst(prev, listener));
+	}, []);
 
-	}
+	const addSettingsButtonListener = useCallback((listener: () => void) => {
+		setSettingsButtonListeners((prev) => [listener, ...prev]);
+	}, []);
 
-	const removeSecondaryMainButton = (props: SecondaryMainButtonProps) => {
-		setSecondaryMainButtons((prev) => {
-			const index = prev.indexOf(props);
+	const removeSettingsButtonListener = useCallback((listener: () => void) => {
+		setSettingsButtonListeners((prev) => removeFirst(prev, listener));
+	}, []);
 
-			return prev.filter((_, i) => i !== index);
-		});
-	}
-	
+	const registerMainButton = useCallback((props: MainButtonProps) => {
+		const id = ++nextButtonId.current;
+		setMainButtons((prev) => [{ id, props }, ...prev]);
+		return id;
+	}, []);
+
+	const updateMainButton = useCallback((id: number, props: MainButtonProps) => {
+		setMainButtons((prev) => prev.map((entry) => (entry.id === id ? { id, props } : entry)));
+	}, []);
+
+	const unregisterMainButton = useCallback((id: number) => {
+		setMainButtons((prev) => prev.filter((entry) => entry.id !== id));
+	}, []);
+
+	const registerSecondaryMainButton = useCallback((props: SecondaryMainButtonProps) => {
+		const id = ++nextButtonId.current;
+		setSecondaryMainButtons((prev) => [{ id, props }, ...prev]);
+		return id;
+	}, []);
+
+	const updateSecondaryMainButton = useCallback((id: number, props: SecondaryMainButtonProps) => {
+		setSecondaryMainButtons((prev) => prev.map((entry) => (entry.id === id ? { id, props } : entry)));
+	}, []);
+
+	const unregisterSecondaryMainButton = useCallback((id: number) => {
+		setSecondaryMainButtons((prev) => prev.filter((entry) => entry.id !== id));
+	}, []);
+
+	// Pre-1.3 API: register by props object
+	const addMainButton = useCallback((props: MainButtonProps) => {
+		legacyButtonIds.current.set(props, registerMainButton(props));
+	}, []);
+
+	const removeMainButton = useCallback((props: MainButtonProps) => {
+		const id = legacyButtonIds.current.get(props);
+		if (id !== undefined) unregisterMainButton(id);
+	}, []);
+
+	const addSecondaryMainButton = useCallback((props: SecondaryMainButtonProps) => {
+		legacyButtonIds.current.set(props, registerSecondaryMainButton(props));
+	}, []);
+
+	const removeSecondaryMainButton = useCallback((props: SecondaryMainButtonProps) => {
+		const id = legacyButtonIds.current.get(props);
+		if (id !== undefined) unregisterSecondaryMainButton(id);
+	}, []);
 
 	// The model that contains the Telegram web app and its ready state
-	const model: TelegramWebAppModel = {
-		// A getter function to retrieve the Telegram web app
-		get app() {
-			// If the current environment doesn't have a window object, return undefined
-			if (typeof window === 'undefined') {
-				return undefined;
-			}
-			// Otherwise, try to retrieve the Telegram web app from the window object
-			return (window as any)?.Telegram?.WebApp as TelegramWebApps.WebApp;
-		},
-		// The ready state of the Telegram web app
-		isReady,
-		addBackButtonListener,
-		removeBackButtonListener,
-		addMainButton,
-		removeMainButton,
-		addSecondaryMainButton,
-		removeSecondaryMainButton,
-	};
-
-	
-
-	// A function that sets the ready state to true
-	const onReady = () => {
-		setIsReady(true);
-	};
-
-	// Render the component with the model and its children
-	return (
-		<TelegramWebAppScript onLoad={onReady}>
-			<TelegramWebAppContext.Provider value={model}>{children}</TelegramWebAppContext.Provider>
-		</TelegramWebAppScript>
+	const model: TelegramWebAppModel = useMemo(
+		() => ({
+			// A getter function to retrieve the Telegram web app
+			get app() {
+				return getWebApp();
+			},
+			// The ready state of the Telegram web app
+			isReady,
+			addBackButtonListener,
+			removeBackButtonListener,
+			addSettingsButtonListener,
+			removeSettingsButtonListener,
+			addMainButton,
+			removeMainButton,
+			registerMainButton,
+			updateMainButton,
+			unregisterMainButton,
+			addSecondaryMainButton,
+			removeSecondaryMainButton,
+			registerSecondaryMainButton,
+			updateSecondaryMainButton,
+			unregisterSecondaryMainButton,
+		}),
+		[isReady]
 	);
+
+	return <TelegramWebAppContext.Provider value={model}>{children}</TelegramWebAppContext.Provider>;
 }
 
 // A higher-order component that passes the Telegram web app and its ready state to a given component
@@ -251,24 +301,53 @@ export function withTelegramWebApp(Component: ComponentType<any>, contextProps: 
 	};
 }
 
-// A functional component that injects the Telegram web app script into the document head
-function TelegramWebAppScript({ children, onLoad }: { children: JSX.Element; onLoad: () => void }) {
+function removeFirst<T>(list: T[], item: T): T[] {
+	const index = list.indexOf(item);
 
-	// Use an effect hook to inject the Telegram web app script into the document head once and remove it on unload
-	useEffect(() => {
-		// Create a new script element for the Telegram web app script
-		const tgWebAppScript = document.createElement("script");
-		// Set the source of the script to the Telegram web app script
-		tgWebAppScript.src = "https://telegram.org/js/telegram-web-app.js";
-		// Set the onload callback to the provided onLoad function
-		tgWebAppScript.onload = onLoad;
-		// Append the script to the document head
-		document.head.appendChild(tgWebAppScript);
-		// Return a cleanup function that removes the script from the document head
-		return () => {
-			document.head.removeChild(tgWebAppScript);
-		};
-	}, []);
- 
-	return children;
+	if (index === -1) return list;
+
+	return list.filter((_, i) => i !== index);
+}
+
+// Hides after a delay; the returned cleanup cancels hiding if a button appears again
+function deferHide(delay: number, hide: () => void) {
+	if (delay <= 0) {
+		hide();
+		return;
+	}
+
+	const timeout = setTimeout(hide, delay);
+
+	return () => clearTimeout(timeout);
+}
+
+function applyBottomButton(
+	webApp: TelegramWebApps.WebApp,
+	button: TelegramWebApps.BottomButton,
+	props: MainButtonProps,
+	params: Parameters<TelegramWebApps.SecondaryButton["setParams"]>[0]
+) {
+	button.setText(props.text || "CONTINUE");
+
+	if (button.isActive && props.disable) {
+		button.disable();
+	} else if (!button.isActive && !props.disable) {
+		button.enable();
+	}
+
+	if (!button.isProgressVisible && props.progress) {
+		button.showProgress(false);
+	} else if (button.isProgressVisible && !props.progress) {
+		button.hideProgress();
+	}
+
+	button.setParams({
+		...params,
+		has_shine_effect: props.hasShineEffect ?? false,
+		...(isVersionAtLeast(webApp, "9.5") ? { icon_custom_emoji_id: props.iconCustomEmojiId ?? "" } : {}),
+	});
+
+	if (!button.isVisible) {
+		button.show();
+	}
 }
